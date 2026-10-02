@@ -152,7 +152,6 @@ services:
       context: ../Arogya-Frontend
     container_name: arogya-frontend
     ports:
-      - "80:80"
       - "5173:80"
     depends_on:
       - api-gateway
