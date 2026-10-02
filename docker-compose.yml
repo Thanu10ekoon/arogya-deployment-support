@@ -142,7 +142,8 @@ services:
       - QUEUE_SERVICE_URL=http://queue-service:8084
       - CONSULTATION_SERVICE_URL=http://consultation-service:8086
       - MEDICAL_RECORDS_SERVICE_URL=http://medical-records-service:8085
-      # TODO: LLM API keys need to be passed here during runtime
+      env_file:
+      - .env
     networks:
       - arogya-network
 
