@@ -1,4 +1,4 @@
-﻿version: '3.8'
+version: '3.8'
 
 services:
   arogya-mysql:
@@ -142,8 +142,8 @@ services:
       - QUEUE_SERVICE_URL=http://queue-service:8084
       - CONSULTATION_SERVICE_URL=http://consultation-service:8086
       - MEDICAL_RECORDS_SERVICE_URL=http://medical-records-service:8085
-      env_file:
-      - .env
+    env_file:
+      - ../Arogya-Chatbot/.env
     networks:
       - arogya-network
 
