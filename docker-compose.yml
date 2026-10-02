@@ -1,0 +1,163 @@
+﻿version: '3.8'
+
+services:
+  arogya-mysql:
+    image: mysql:8.0
+    container_name: arogya-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./localhost.sql:/docker-entrypoint-initdb.d/init.sql
+    restart: unless-stopped
+    networks:
+      - arogya-network
+
+  arogya-redis:
+    image: redis:latest
+    container_name: arogya-redis
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+    networks:
+      - arogya-network
+
+  discovery-service:
+    build:
+      context: ../Arogya-Backend/discovery-service
+    container_name: discovery-service
+    ports:
+      - "8761:8761"
+    environment:
+      - EUREKA_INSTANCE_HOSTNAME=discovery-service
+    networks:
+      - arogya-network
+
+  api-gateway:
+    build:
+      context: ../Arogya-Backend/api-gateway
+    container_name: api-gateway
+    ports:
+      - "8090:8090"
+    environment:
+      - EUREKA_INSTANCE_HOSTNAME=api-gateway
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-service:8761/eureka/
+      - SPRING_DATA_REDIS_HOST=arogya-redis
+    depends_on:
+      - discovery-service
+      - arogya-redis
+    networks:
+      - arogya-network
+
+  user-service:
+    build:
+      context: ../Arogya-Backend/user-service
+    container_name: user-service
+    environment:
+      - Database_Host=jdbc:mysql://arogya-mysql:3306/user_service_db?useSSL=false&allowPublicKeyRetrieval=true
+      - Database_Username=root
+      - Database_Password=root
+      - EUREKA_INSTANCE_HOSTNAME=user-service
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-service:8761/eureka/
+    depends_on:
+      - arogya-mysql
+      - discovery-service
+    networks:
+      - arogya-network
+
+  clinic-service:
+    build:
+      context: ../Arogya-Backend/clinic-service
+    container_name: clinic-service
+    environment:
+      - Database_Host=jdbc:mysql://arogya-mysql:3306/clinic_service_db?useSSL=false&allowPublicKeyRetrieval=true
+      - Database_Username=root
+      - Database_Password=root
+      - EUREKA_INSTANCE_HOSTNAME=clinic-service
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-service:8761/eureka/
+    depends_on:
+      - arogya-mysql
+      - discovery-service
+    networks:
+      - arogya-network
+
+  consultation-service:
+    build:
+      context: ../Arogya-Backend/consultation-service
+    container_name: consultation-service
+    environment:
+      - Database_Host=jdbc:mysql://arogya-mysql:3306/consultation_service_db?useSSL=false&allowPublicKeyRetrieval=true
+      - Database_Username=root
+      - Database_Password=root
+      - EUREKA_INSTANCE_HOSTNAME=consultation-service
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-service:8761/eureka/
+    depends_on:
+      - arogya-mysql
+      - discovery-service
+    networks:
+      - arogya-network
+
+  queue-service:
+    build:
+      context: ../Arogya-Backend/queue-service
+    container_name: queue-service
+    environment:
+      - Database_Host=jdbc:mysql://arogya-mysql:3306/queue_service_db?useSSL=false&allowPublicKeyRetrieval=true
+      - Database_Username=root
+      - Database_Password=root
+      - EUREKA_INSTANCE_HOSTNAME=queue-service
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-service:8761/eureka/
+    depends_on:
+      - arogya-mysql
+      - discovery-service
+    networks:
+      - arogya-network
+
+  medical-records-service:
+    build:
+      context: ../Arogya-Backend/medical-records-service
+    container_name: medical-records-service
+    environment:
+      - Database_Host=jdbc:mysql://arogya-mysql:3306/medical_record_service_db?useSSL=false&allowPublicKeyRetrieval=true
+      - Database_Username=root
+      - Database_Password=root
+      - EUREKA_INSTANCE_HOSTNAME=medical-records-service
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-service:8761/eureka/
+    depends_on:
+      - arogya-mysql
+      - discovery-service
+    networks:
+      - arogya-network
+
+  arogya-chatbot:
+    build:
+      context: ../Arogya-Chatbot
+    container_name: arogya-chatbot
+    ports:
+      - "8091:8091"
+    environment:
+      - USER_SERVICE_URL=http://user-service:8081
+      - CLINIC_SERVICE_URL=http://clinic-service:8082
+      - QUEUE_SERVICE_URL=http://queue-service:8084
+      - CONSULTATION_SERVICE_URL=http://consultation-service:8086
+      - MEDICAL_RECORDS_SERVICE_URL=http://medical-records-service:8085
+      # TODO: LLM API keys need to be passed here during runtime
+    networks:
+      - arogya-network
+
+  arogya-frontend:
+    build:
+      context: ../Arogya-Frontend
+    container_name: arogya-frontend
+    ports:
+      - "5173:80"
+    depends_on:
+      - api-gateway
+      - arogya-chatbot
+    networks:
+      - arogya-network
+
+networks:
+  arogya-network:
+    driver: bridge
