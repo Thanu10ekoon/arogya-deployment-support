@@ -31,6 +31,7 @@ services:
       - "8761:8761"
     environment:
       - EUREKA_INSTANCE_HOSTNAME=discovery-service
+    restart: unless-stopped
     networks:
       - arogya-network
 
@@ -47,6 +48,7 @@ services:
     depends_on:
       - discovery-service
       - arogya-redis
+    restart: unless-stopped
     networks:
       - arogya-network
 
@@ -63,6 +65,7 @@ services:
     depends_on:
       - arogya-mysql
       - discovery-service
+    restart: unless-stopped
     networks:
       - arogya-network
 
@@ -79,6 +82,7 @@ services:
     depends_on:
       - arogya-mysql
       - discovery-service
+    restart: unless-stopped
     networks:
       - arogya-network
 
@@ -95,6 +99,7 @@ services:
     depends_on:
       - arogya-mysql
       - discovery-service
+    restart: unless-stopped
     networks:
       - arogya-network
 
@@ -111,6 +116,7 @@ services:
     depends_on:
       - arogya-mysql
       - discovery-service
+    restart: unless-stopped
     networks:
       - arogya-network
 
@@ -127,6 +133,7 @@ services:
     depends_on:
       - arogya-mysql
       - discovery-service
+    restart: unless-stopped
     networks:
       - arogya-network
 
@@ -144,6 +151,7 @@ services:
       - MEDICAL_RECORDS_SERVICE_URL=http://medical-records-service:8085
     env_file:
       - ../Arogya-Chatbot/.env
+    restart: unless-stopped
     networks:
       - arogya-network
 
@@ -160,6 +168,7 @@ services:
     depends_on:
       - api-gateway
       - arogya-chatbot
+    restart: unless-stopped
     networks:
       - arogya-network
 
